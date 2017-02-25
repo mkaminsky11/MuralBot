@@ -1,0 +1,6 @@
+# MuralBot
+
+## Starting
+```
+sudo pigpiod
+```
