@@ -12,9 +12,9 @@ if not pi.connected:
 	exit()
 else:
 	# all good, keep going
-	pi.set_servo_pulsewidth(gpio_num, 1000)
+	pi.set_servo_pulsewidth(gpio_num, 500)
 	time.sleep(5)
-	pi.set_servo_pulsewidth(gpio_num, 2000)
+	pi.set_servo_pulsewidth(gpio_num, 2500)
 	time.sleep(5)
 	pi.set_servo_pulsewidth(gpio_num, 1500)
 
