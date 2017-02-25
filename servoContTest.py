@@ -3,7 +3,7 @@ import time
 import random
 import pigpio
 
-gpio_nums = [3,4] # where connected
+gpio_num = [3,4] # where connected
 
 pi = pigpio.pi()
 
