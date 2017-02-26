@@ -3,6 +3,7 @@ import time
 #import random
 import pigpio
 #import atexit
+import config
 
 gpio_num = 12 # where connected
 
