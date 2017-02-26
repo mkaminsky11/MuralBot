@@ -3,6 +3,35 @@ import pigpio
 import atexit
 import config
 
+from PIL import Image
+
+img = Image.open('resized_grayscale.png').convert('RGB')
+
+#
+# IMAGE
+#
+
+data = []
+have = []
+for y in range(0,config.px_y):
+	line_text = []
+	have_text = []
+	for x in range(0,config.px_x):
+		px = img.getpixel((x,y))
+		val = 0
+		if px[0] == px[1] and px[0] == px[2]:
+			# alright, all rgb
+			val = px[0]
+		have_text.append[False]
+		if val < 125:
+			line_text.append(True)
+		else:
+			line_text.append(False)
+	data.append(line_text)
+	have.append(have_text)
+
+
+
 pi = pigpio.pi()
 if not pi.connected:
 	print("exit")
@@ -12,6 +41,8 @@ if not pi.connected:
 turns = 0
 t = 0
 goalTime = 0
+row = 0
+col = 0
 
 def goStr(tt):
 	global goalTime
@@ -59,10 +90,16 @@ def dn():
 	global state
 	global t
 	global started
+	global have
+	global turns
 
 	t = 0
 	state = 0
 	started = False
+	row = 0
+	col = 0
+	turns = 0
+	have = []
 	stopAll()
 	
 
@@ -81,7 +118,6 @@ lastCamTime = time.time()
 startTime = time.time()
 state = 0 # 0 = none 1 = str 2 = turn 3 = correct
 
-
 #stopAll()
 
 while(ok):
@@ -92,15 +128,20 @@ while(ok):
 			t = 1
 			#goStr(2)
 			print("s1")
-			turnR(1.41)
+			turnR(1.41) # remove this and stuff
 			print("s2")
 	if time.time() - startTime > goalTime:
 		if state == 1:
 			# done going straight, start turning
-			turnR(1.41)
+			if turns % 2 == 0:	
+				turnR(1.41)
+			else:
+				turnL(1.41)
+			turns = turns + 1
 			print("turning")
 
 			# check to see if should stop
+			# REMOVE THIS
 			t = t + 1
 			if t == 2:
 				# should stop here
