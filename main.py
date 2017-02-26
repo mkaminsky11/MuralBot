@@ -3,34 +3,22 @@ import pigpio
 import atexit
 import config
 
-from PIL import Image
+import json
 
-img = Image.open('resized_grayscale.png').convert('RGB')
-
-#
-# IMAGE
-#
+import json
+from pprint import pprint
 
 data = []
 have = []
-for y in range(0,config.px_y):
-	line_text = []
-	have_text = []
-	for x in range(0,config.px_x):
-		px = img.getpixel((x,y))
-		val = 0
-		if px[0] == px[1] and px[0] == px[2]:
-			# alright, all rgb
-			val = px[0]
-		have_text.append[False]
-		if val < 125:
-			line_text.append(True)
-		else:
-			line_text.append(False)
-	data.append(line_text)
-	have.append(have_text)
+rows = 0
+cols = 0
 
-
+with open('data.json') as data_file:    
+	d = json.load(data_file)
+	data = d["data"]
+	have = d["have"]
+	rows = len(data)
+	cols = len(data[0])
 
 pi = pigpio.pi()
 if not pi.connected:
@@ -44,13 +32,26 @@ goalTime = 0
 row = 0
 col = 0
 
+timeToRow = 24 / (29.5 / 4)
+
+def getCol():
+	global startTime
+	time_elap = time.time() - startTime
+	dist_traveled = (29.5 / 4) * time_elap
+	c = int((dist_traveled - (dist_traveled % 0.75)) / 0.75)
+	if c > (cols - 1):
+		c = cols - 1
+	if c < 0:
+		c = 0
+	return c
+
 def goStr(tt):
 	global goalTime
 	global state
 	global startTime
 	state = 1
 	startTime = time.time()
-	s(config.d1_pin, 1172)
+	s(config.d1_pin, 1132)
 	s(config.d2_pin, 2500)
 	goalTime = tt
 
@@ -72,7 +73,7 @@ def turnR(tt):
 	state = 2
 	startTime = time.time()
 	s(config.d1_pin, 700)
-	s(config.d2_pin, 1000)
+	s(config.d2_pin, 1200)
 	goalTime = tt
 
 def corr(tt):
@@ -118,7 +119,7 @@ lastCamTime = time.time()
 startTime = time.time()
 state = 0 # 0 = none 1 = str 2 = turn 3 = correct
 
-#stopAll()
+stopAll()
 
 while(ok):
 	pressed = pi.read(config.b_pin) == 0
@@ -126,24 +127,25 @@ while(ok):
 		if not started:
 			started = True
 			t = 1
-			#goStr(2)
+			goStr(2)
 			print("s1")
-			turnR(1.41) # remove this and stuff
+			#turnR(1.17) # remove this and stuff
 			print("s2")
 	if time.time() - startTime > goalTime:
 		if state == 1:
 			# done going straight, start turning
 			if turns % 2 == 0:	
-				turnR(1.41)
+				turnR(1.37)
 			else:
-				turnL(1.41)
+				turnL(1.30)
 			turns = turns + 1
+			row = row + 1
 			print("turning")
 
 			# check to see if should stop
 			# REMOVE THIS
 			t = t + 1
-			if t == 2:
+			if t == rows:
 				# should stop here
 				dn()
 				print("ending")
@@ -153,11 +155,17 @@ while(ok):
 			print("correcting")
 
 		elif state == 3:
-			dn()
+			#dn()
 			# stop correcting, start going straight
-			#goStr(2)
+			goStr(2)
 			print("straight")
-	
+
+	if state == 1 and data[row][getCol()] == True and have[row][getCol()] == False:
+		# spray some stuff here
+		print(row, getCol())
+		pi.set_servo_pulsewidth(12, 800)
+		time.sleep(0.3)
+		pi.set_servo_pulsewidth(12, 1500)
 
 
 pi.stop()
